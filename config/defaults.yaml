@@ -1,0 +1,18 @@
+# Roundcube default config
+servicemanager:
+    aliases:
+        Session: Roundcube\Server\Session
+
+    factories:
+
+log:
+    driver: file
+    level: 100  # INFO
+
+jmap:
+    providers:
+        - Roundcube\JMAP\Provider\JmapProxy
+
+auth:
+    providers:
+        - Roundcube\JMAP\Provider\JmapProxy

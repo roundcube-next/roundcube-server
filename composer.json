@@ -1,0 +1,19 @@
+{
+	"name": "roundcube/webmail",
+	"description": "Roundcube Next Webmail",
+	"license": "GPL-3.0",
+	"version": "0.0.0",
+	"repositories": [
+	],
+	"require": {
+		"php": ">=5.4.1",
+		"symfony/yaml": "~2.7.1",
+		"monolog/monolog": "1.2.*",
+		"sabre/event" : "~2.0.0",
+		"sabre/http" : "~4.1.0"
+	},
+	"require-dev": {
+		"phpunit/phpunit" : "~4.3"
+	},
+	"minimum-stability": "dev"
+}

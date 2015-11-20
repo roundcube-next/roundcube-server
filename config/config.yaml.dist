@@ -1,0 +1,16 @@
+# Roundcube main config
+jmapproxy:
+    url: http://<jmap-proxy-host>
+
+    # POST these parameter to /signup for authentication
+    signup:
+      imapHost: <imap-host-or-ip>
+      imapPort: 143  # 143 or 993
+      imapSSL: 1     # 1=plain, 2=ssl, 3=starttls
+      smtpHost: <smtp-host-or-ip>
+      smtpPort: 587  # 25 or 587
+      smtpSSL: 3     # 1=plain, 2=ssl, 3=starttls
+      caldavURL:     # leave empty for now
+      carddavURL:    # leave empty for now
+      force: 1       # required, don't change
+
