@@ -53,8 +53,9 @@ class Utils
                 $default_port = 443;
             }
 
-            $prefix = $schema . '://' . preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST']);
-            if ($_SERVER['SERVER_PORT'] != $default_port) {
+            $hostname = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : gethostname();
+            $prefix = $schema . '://' . preg_replace('/:\d+$/', '', $hostname);
+            if (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != $default_port) {
                 $prefix .= ':' . $_SERVER['SERVER_PORT'];
             }
 
@@ -83,7 +84,7 @@ class Utils
         ) {
             return true;
         }
-        if ($port && $_SERVER['SERVER_PORT'] == $port) {
+        if ($port && isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == $port) {
             return true;
         }
 
