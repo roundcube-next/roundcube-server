@@ -12,7 +12,7 @@
  * For full license information see http://www.gnu.org/licenses/gpl-3.0
  */
 
-define('ROUNDCUBE_INSTALL_ROOT', realpath('../'));
+define('ROUNDCUBE_INSTALL_ROOT', realpath(__DIR__ . '/..'));
 
 if (!defined('ROUNDCUBE_CONFIG_DIR')) {
     define('ROUNDCUBE_CONFIG_DIR', ROUNDCUBE_INSTALL_ROOT . 'config');
