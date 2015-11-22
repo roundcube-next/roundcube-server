@@ -16,3 +16,4 @@ jmap:
 auth:
     providers:
         - Roundcube\JMAP\Provider\JmapProxy
+    # prompt: ""

@@ -129,6 +129,11 @@ class Auth implements ProcessorInterface
             $this->session->set('Auth\username', $json_input['username']);
 
             $result = [ 'methods' => array_unique($methods), 'continuationToken' => $this->session->key ];
+
+            // add prompt phrase stored in config
+            if ($prompt = App::getInstance()->get('Config')->get('auth.prompt'))
+                $result['prompt'] = $prompt;
+
             $response->setBody(json_encode($result));
             $response->setStatus(200);
 

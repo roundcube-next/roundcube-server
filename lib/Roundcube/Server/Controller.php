@@ -129,9 +129,9 @@ class Controller implements Event\EventEmitterInterface
 
         // FIXME: respond to OPTIONS requests directly and without validation
         if ($this->httpRequest->getMethod() == 'OPTIONS') {
-            $this->httpResponse->addHeader('Access-Control-Request-Method', 'GET, POST');
+            $this->httpResponse->addHeader('Access-Control-Request-Method', 'GET, POST, OPTIONS');
             $this->httpResponse->addHeader('Access-Control-Allow-Headers', $this->httpRequest->getHeader('Access-Control-Request-Headers'));
-            $this->httpResponse->setStatus(200);
+            $this->httpResponse->setStatus(204);
             $this->sapi->sendResponse($this->httpResponse);
             return;
         }
