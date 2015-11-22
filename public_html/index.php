@@ -39,7 +39,9 @@ $app = Server\App::getInstance(ROUNDCUBE_ENV);
 $log = Logger::get('server');
 
 $server = $app->get('Server\Controller');
-$server->httpRequest->setBaseUrl(preg_replace('![^/]+$!', '', strval(isset($_SERVER['REDIRECT_SCRIPT_URL']) ? $_SERVER['REDIRECT_SCRIPT_URL'] : $_SERVER['SCRIPT_NAME'])));
+
+if (php_sapi_name() !== 'cli-server')
+    $server->httpRequest->setBaseUrl(preg_replace('![^/]+$!', '', strval(isset($_SERVER['REDIRECT_SCRIPT_URL']) ? $_SERVER['REDIRECT_SCRIPT_URL'] : $_SERVER['SCRIPT_NAME'])));
 
 // attach debug logger
 $server->on('process:before', function($e) use ($log) {
