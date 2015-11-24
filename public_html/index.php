@@ -40,8 +40,8 @@ $log = Logger::get('server');
 
 $server = $app->get('Server\Controller');
 
-if (php_sapi_name() !== 'cli-server')
-    $server->httpRequest->setBaseUrl(preg_replace('![^/]+$!', '', strval(isset($_SERVER['REDIRECT_SCRIPT_URL']) ? $_SERVER['REDIRECT_SCRIPT_URL'] : $_SERVER['SCRIPT_NAME'])));
+if (php_sapi_name() !== 'cli-server' && isset($_SERVER['DOCUMENT_ROOT']) && isset($_SERVER['SCRIPT_FILENAME']))
+    $server->httpRequest->setBaseUrl(substr(dirname($_SERVER['SCRIPT_FILENAME']), strlen($_SERVER['DOCUMENT_ROOT'])) . '/');
 
 // attach debug logger
 $server->on('process:before', function($e) use ($log) {
