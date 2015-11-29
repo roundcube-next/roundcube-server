@@ -20,7 +20,7 @@ namespace Roundcube\JMAP;
 /**
  * Absract class representing a JMAP Mail provider
  */
-abstract class MailProvider extends Provider
+abstract class MailProvider extends Provider implements MailProviderInterface
 {
     /**
      * Getter for the list of services this provider supports
@@ -58,31 +58,4 @@ abstract class MailProvider extends Provider
         ];
     }
 
-    /* mandatory methods for mail providers */
-
-    abstract public function getMailboxes($args);
-
-    abstract public function getMailboxUpdates($args);
-
-    abstract public function setMailboxes($args);
-
-    abstract public function getMessageList($args);
-
-    abstract public function getMessageListUpdates($args);
-
-    abstract public function getThreads($args);
-
-    abstract public function getThreadUpdates($args);
-
-    abstract public function getMessages($args);
-
-    abstract public function getMessageUpdates($args);
-
-    abstract public function setMessages($args);
-
-    abstract public function importMessage($args);
-
-    abstract public function copyMessages($args);
-
-    abstract public function reportMessages($args);
 }

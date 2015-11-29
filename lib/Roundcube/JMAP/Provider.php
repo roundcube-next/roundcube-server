@@ -22,7 +22,7 @@ use Roundcube\Server\Processor\JMAP;
 /**
  * Absract class representing a JMAP provider/account
  */
-abstract class Provider
+abstract class Provider implements ProviderInterface
 {
     protected $controller;
 
@@ -37,34 +37,4 @@ abstract class Provider
         $this->controller = $controller;
     }
 
-    /**
-     * Getter for the (primary) account ID this provider belongs to
-     *
-     * @return string
-     */
-    abstract public function getAccountID();
-
-    /**
-     * Getter for the list of accounts this provider is connected with
-     *
-     * @return array
-     */
-    abstract public function getAccounts();
-
-    /**
-     * Getter for the list of JMAP methods this provider supports
-     *
-     * @return array
-     */
-    abstract public function getMethods();
-
-    /**
-     * Getter for the list of services this provider supports
-     *
-     * These can be well-known services like 'Mail', 'Contacts', 'Calendars'
-     * or customer types only supported by client plugins.
-     *
-     * @return array
-     */
-    abstract public function getServices();
 }

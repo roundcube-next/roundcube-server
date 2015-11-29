@@ -82,7 +82,7 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
         $postdata = $this->proxyconfig['signup'] + ['username' => $data['username'], 'password' => $data['password']];
         $request->setBody(http_build_query($postdata));
 
-        $this->logger->debug('authenticate:request', ['dump' => strval($request)]);
+        // $this->logger->debug('authenticate:request', ['dump' => strval($request)]);
 
         try {
             $client = new HttpClient();
@@ -108,11 +108,11 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
             }
         }
         catch (HTTP\ClientException $e) {
-            $this->logger->debug('JmapProxy HTTP Error: ' . $e->getMessage());
+            $this->logger->err('JmapProxy HTTP Error: ' . $e->getMessage());
             $success = false;
         }
         catch (HTTP\ClientHttpException $e) {
-            $this->logger->debug('JmapProxy HTTP Error: ' . $e->getMessage(),
+            $this->logger->err('JmapProxy HTTP Error: ' . $e->getMessage(),
                 ['status' => $e->getHttpStatus(), 'response' => $e->getResponse()]);
             $success = false;
         }

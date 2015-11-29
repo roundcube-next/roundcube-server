@@ -61,7 +61,7 @@ class Response extends HTTP\Response
      *
      * @return resource|string
      */
-    function getBody()
+    public function getBody()
     {
         return json_encode($this->jmap_responses);
     }
