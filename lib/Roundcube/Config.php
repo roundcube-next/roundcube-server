@@ -77,13 +77,15 @@ class Config implements Event\EventEmitterInterface
         }
 
         $infile = $this->resolve_path($file, $use_env);
-        if ($raw = $this->parse_yaml_file($infile)) {
+
+        try {
+            $raw = Yaml::parse(file_get_contents($infile));
             $this->register($raw);
             $this->valid = !empty($this->data);
         }
-        else {
-            $this->emit('error', [['level' => E_USER_ERROR, 'message' => "Failed to parse configuration from $infile"]]);
-            trigger_error("Failed to parse configuration from $infile", E_USER_ERROR);
+        catch (\Exception $e) {
+            $this->emit('error', [['level' => E_USER_ERROR, 'message' => "Failed to parse configuration from $infile", 'reason' => $e->getMessage()]]);
+            trigger_error("Failed to parse configuration from $infile: " . $e->getMessage(), E_USER_ERROR);
         }
     }
 
@@ -105,22 +107,6 @@ class Config implements Event\EventEmitterInterface
         }
 
         return $file;
-    }
-
-    /**
-     * Wrapper for Yaml::parse() with exception handling
-     */
-    protected function parse_yaml_file($filename)
-    {
-        try {
-            $raw = Yaml::parse(file_get_contents($filename));
-        }
-        catch (\Exception $e) {
-            $this->emit('exception', [$e]);
-            return false;
-        }
-
-        return $raw;
     }
 
     /**

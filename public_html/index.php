@@ -36,23 +36,27 @@ use \Roundcube\Server;
 // create server app instance
 $app = Server\App::getInstance(ROUNDCUBE_ENV);
 
-$log = Logger::get('server');
-
 $server = $app->get('Server\Controller');
 
 if (php_sapi_name() !== 'cli-server' && isset($_SERVER['DOCUMENT_ROOT']) && isset($_SERVER['SCRIPT_FILENAME']))
     $server->httpRequest->setBaseUrl(substr(dirname($_SERVER['SCRIPT_FILENAME']), strlen($_SERVER['DOCUMENT_ROOT'])) . '/');
 
 // attach debug logger
-$server->on('process:before', function($e) use ($log) {
-    $log->debug('process:before', $e);
+$server->on('process:before', function($e) {
+    $request = $e['request'];
+    $request->setBody($request->getBodyAsString());  // read stdin as string and write back
+    Logger::get('http')->debug('process:before', ['request' => strval($request)]);
 });
-$server->on('jmap:query', function($e) use ($log) {
-    $log->debug('jmap:query', $e);
+
+$server->on('process:after', function($e) {
+    Logger::get('http')->debug('process:after', ['response' => strval($e['response'])]);
 });
-$server->on('process:after', function($e) use ($log) {
-    $log->debug('process:after', $e);
-});
+
+foreach (['jmap:auth:init','jmap:auth:more','jmap:auth:continue','jmap:query','jmap:response'] as $eventname) {
+    $server->on($eventname, function($e) use ($eventname) {
+        Logger::get('jmap')->debug($eventname, $e);
+    });
+}
 
 // process request
 $server->process();

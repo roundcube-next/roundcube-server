@@ -28,7 +28,7 @@ class Utils
      */
     public static function abspath($dirname, $append = '')
     {
-        if ($dirname[0] != '/')
+        if ($dirname[0] != '/' && !preg_match('![a-z]+://!', $dirname))
             $dirname = realpath(ROUNDCUBE_INSTALL_ROOT . '/' . $dirname);
 
         return rtrim($dirname, '/') . $append;

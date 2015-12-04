@@ -6,8 +6,31 @@ servicemanager:
     factories:
 
 log:
-    driver: file
-    level: 100  # INFO
+    level: 300  # global log leven if handlers don't specify it
+    dir: ./logs
+
+    handlers:
+        app:
+            type: file
+            level: 300 # WARNING
+            path: %(log.dir)/application.log
+            enabled: true
+
+        debug:
+            type: file
+            level: 100 # DEBUG
+            path: %(log.dir)/debug.log
+            channel:
+              - !http
+              - !jmapproxy
+            enabled: false
+
+        jmap:
+            type: file
+            level: 100 # DEBUG
+            path: %(log.dir)/jmap.log
+            channel: jmap
+            enabled: false
 
 jmap:
     providers:
