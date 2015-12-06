@@ -54,7 +54,14 @@ class Controller implements Event\EventEmitterInterface
      *
      * @var array
      */
-    public $routes = array();
+    public $routes = [];
+
+    /**
+     * List of registered processor instances
+     *
+     * @var array
+     */
+    public $processors = [];
 
     /**
      * The Logger instance
@@ -96,6 +103,7 @@ class Controller implements Event\EventEmitterInterface
     public function addProcessor($processor)
     {
         $processor->init($this);
+        $this->processors[] = $processor;
     }
 
     /**
@@ -125,7 +133,11 @@ class Controller implements Event\EventEmitterInterface
         // set Content Security Policy and CORS headers
         $this->httpResponse->addHeader('Content-Security-Policy', "default-src *");
         $this->httpResponse->addHeader('X-Content-Security-Policy', "default-src *");
-        $this->httpResponse->addHeader('Access-Control-Allow-Origin', "*");
+
+        if ($this->httpRequest->hasHeader('Origin')) {
+            // TODO: allow to configure allowed origins
+            $this->httpResponse->addHeader('Access-Control-Allow-Origin', "*");
+        }
 
         // FIXME: respond to OPTIONS requests directly and without validation
         if ($this->httpRequest->getMethod() == 'OPTIONS') {
@@ -137,9 +149,7 @@ class Controller implements Event\EventEmitterInterface
         }
 
         // extract route from request (jmap, auth|.well-known/jmap, upload)
-        $route = $this->httpRequest->getPath();
-
-        if ($this->routes[$route]) {
+        if ($route = $this->getRouteMatch($this->httpRequest->getPath())) {
             try {
                 call_user_func($this->routes[$route], $this->httpRequest, $this->httpResponse);
             }
@@ -161,5 +171,28 @@ class Controller implements Event\EventEmitterInterface
         $this->emit('process:after', [ ['response' => $this->httpResponse] ]);
 
         $this->sapi->sendResponse($this->httpResponse);
+    }
+
+    /**
+     * Match the given URI path with known routes
+     *
+     * @param string $path The URI path to match
+     * @return string The matching route name or false if none matches
+     */
+    protected function getRouteMatch($path)
+    {
+        // fast-track: check direct match
+        if (!empty($this->routes[$path]))
+            return $path;
+
+        // try to match a RFC6570 URI template route
+        foreach (array_keys($this->routes) as $route) {
+            $expr = '/^' . preg_replace('/\{[a-z0-9:?-]+\}/Ui', '(.+)', $route) . '$/';
+            if (preg_match($expr, $path)) {
+                return $route;
+            }
+        }
+
+        return false;
     }
 }

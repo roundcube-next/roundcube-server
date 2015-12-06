@@ -31,4 +31,14 @@ interface ProcessorInterface
      */
     public function init(Controller $controller);
 
+    /**
+     * Getter for a map of known JMAP endpoints and their connected controller routes
+     *
+     * The endpoint names are listed in the JMAP spec:
+     * http://jmap.io/spec.html#authentication-is-complete-access-token-created
+     *
+     * @return array Hash array with 'name' => 'route' pairs
+     */
+    public function getJmapRoutes();
+
 }

@@ -72,6 +72,19 @@ class JMAP implements ProcessorInterface
     }
 
     /**
+     * Getter for a map of known JMAP endpoints and their connected controller routes
+     *
+     * @return array Empty for this processor
+     */
+    public function getJmapRoutes()
+    {
+        return [
+            'api'      => 'jmap',
+            'download' => 'download/{blobId}/{name}',
+        ];
+    }
+
+    /**
      * Handle JMAP client requests
      */
     public function process(Request $request, Response $response)

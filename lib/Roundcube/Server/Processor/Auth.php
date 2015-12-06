@@ -68,6 +68,16 @@ class Auth implements ProcessorInterface
     }
 
     /**
+     * Getter for a map of known JMAP endpoints and their connected controller routes
+     *
+     * @return array Empty for this processor
+     */
+    public function getJmapRoutes()
+    {
+        return array();
+    }
+
+    /**
      * Handle request to JMAP authentication endpoint
      */
     public function process(Request $request, Response $response)
@@ -217,13 +227,24 @@ class Auth implements ProcessorInterface
      */
     protected function sendAuthSuccess(Response $response, $accessToken = null)
     {
-        // send service endpoint URLs
-        $result = [
-            'api'         => $this->ctrl->url('jmap', true),
-            'upload'      => $this->ctrl->url('upload', true),
-            'download'    => $this->ctrl->url('download', true),
-            'eventSource' => $this->ctrl->url('events', true),
+        // mandatory JMAP API endpoints
+        $routes = [
+            'api'         => '!undefined',
+            'upload'      => '!undefined',
+            'download'    => '!undefined',
+            'eventSource' => '!undefined',
         ];
+
+        // collect service endpoint routes for the registered processors
+        foreach ($this->ctrl->processors as $processor) {
+            $routes = array_merge($routes, $processor->getJmapRoutes());
+        }
+
+        // send service endpoint URLs
+        $result = [];
+        foreach ($routes as $key => $route) {
+            $result[$key] = $this->ctrl->url($route, true);
+        }
 
         if (!empty($accessToken))
             $result['accessToken'] = $accessToken;
