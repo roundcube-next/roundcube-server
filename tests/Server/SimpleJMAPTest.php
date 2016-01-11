@@ -68,4 +68,19 @@ class SimpleJMAPTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(is_array($jsondata[0]));
         $this->assertEquals(['error', ['type'=>'unknownMethod'], '#1'], $jsondata[0]);
     }
+
+    public function testJmapErrorEvent()
+    {
+        $this->server->on('jmap:error', function($args) {
+            // replace result with a valid response
+            $args['result'] = ['foo', ['hooked' => true]];
+        });
+
+        $response = $this->sendRequest([ [ "getFoo", [], "#1" ] ]);
+
+        $jsondata = json_decode($response->getBody(), true);
+        $this->assertTrue(is_array($jsondata));
+        $this->assertEquals(1, count($jsondata));
+        $this->assertEquals(['foo', ['hooked'=>true], '#1'], $jsondata[0]);
+    }
 }

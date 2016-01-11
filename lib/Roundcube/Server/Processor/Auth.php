@@ -144,10 +144,11 @@ class Auth implements ProcessorInterface
             if ($prompt = App::getInstance()->get('Config')->get('auth.prompt'))
                 $result['prompt'] = $prompt;
 
-            $response->setBody(json_encode($result));
-            $response->setStatus(200);
+            $status = 200;
+            $this->ctrl->emit('jmap:auth:more', [ ['result' => &$result, 'status' => &$status ] ]);
 
-            $this->ctrl->emit('jmap:auth:more', [ ['result' => $result, 'status' => 200 ] ]);
+            $response->setBody(json_encode($result));
+            $response->setStatus($status);
         }
         // auth continuation request
         else if (isset($json_input['token']) && isset($json_input['method'])) {
@@ -250,7 +251,7 @@ class Auth implements ProcessorInterface
             $result['accessToken'] = $accessToken;
 
         $status = $accessToken ? 201 : 200;
-        $this->ctrl->emit('jmap:auth:success', [ [ 'result' => &$result, 'status' => $status ] ]);
+        $this->ctrl->emit('jmap:auth:success', [ [ 'result' => &$result, 'status' => &$status ] ]);
 
         $response->setBody(json_encode($result));
         $response->setStatus($status);

@@ -125,7 +125,7 @@ class JMAP implements ProcessorInterface
         if ($json_input === null)
             throw new ProcessorException(400, "Invalid JSON request body");
 
-        $this->ctrl->emit('jmap:query', [['query' => $json_input, 'auth' => $identity ]]);
+        $this->ctrl->emit('jmap:query', [['query' => $json_input, 'auth' => &$this->ctrl->identity ]]);
 
         // dispatch each query command to the registered providers
         foreach ($json_input as $cmd) {
@@ -133,12 +133,14 @@ class JMAP implements ProcessorInterface
 
             if (isset($this->methodmap[$method])) {
                 foreach ($this->invokeProviders($method, $args) as $res) {
-                    $this->ctrl->emit('jmap:response', [['method' => $method, 'args' => $args, 'result' => $res]]);
+                    $this->ctrl->emit('jmap:response', [['method' => $method, 'args' => $args, 'result' => &$res]]);
                     $response->addResponse($res[0], $res[1], $id);
                 }
             }
             else {
-                $response->addResponse('error', [ 'type' => 'unknownMethod' ], $id);
+                $res = ['error', ['type' => 'unknownMethod']];
+                $this->ctrl->emit('jmap:error', [['method' => $method, 'args' => $args, 'result' => &$res]]);
+                $response->addResponse($res[0], $res[1], $id);
             }
         }
 
