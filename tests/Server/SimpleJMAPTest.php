@@ -19,40 +19,8 @@ namespace Roundcube\Server;
 use Sabre\HTTP;
 use Roundcube\JMAP;
 
-class SimpleJMAPTest extends \PHPUnit_Framework_TestCase
+class SimpleJMAPTest extends \Mock\JmapServerTest
 {
-    protected $server;
-    protected $session;
-
-    public function setUp()
-    {
-        $app = App::getInstance();
-
-        $this->server = $app->get('Server\Controller');
-        $this->server->sapi = new \Mock\SapiMock();
-        $this->server->httpResponse = new JMAP\Response();
-        $this->server->debugExceptions = true;
-
-        // fake authenticated session
-        $this->session = $app->get('Session');
-        $this->session->start();
-        $this->session->set('Auth\authenticated', time());
-    }
-
-    protected function sendRequest($body, $path = '/jmap', $headers = [])
-    {
-        if (!is_string($body))
-            $body = json_encode($body);
-
-        $request = new HTTP\Request('POST', $path, $headers, $body);
-        $request->setHeader('Authorization', $this->session->key);
-
-        $this->server->httpRequest = $request;
-        $this->server->process();
-
-        return $this->server->httpResponse;
-    }
-
     public function testGetFoo()
     {
         $jmap = [ [ "getFoo", [], "#1" ] ];
