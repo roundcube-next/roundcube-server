@@ -14,12 +14,33 @@
  * For full license information see http://www.gnu.org/licenses/gpl-3.0
  */
 
-namespace Roundcube\Plugin;
+namespace Roundcube\Server\Plugin;
+
+use Roundcube\Server\App;
 
 /**
  *
  */
 abstract class AbstractPlugin
 {
+    protected $app;
+    protected $options = [];
+
+    /**
+     * Default setup
+     *
+     * @param object Roundcube\Server\App $app App instance
+     * @param array $options Hash array with plugin options from config
+     */
+    public function setup(App $app, array $options = [])
+    {
+        $this->app = $app;
+        $this->options = $options;
+    }
     
+    /**
+     * Plugin initialization routine
+     */
+    abstract public function init();
+
 }

@@ -40,3 +40,8 @@ auth:
     providers:
         - Roundcube\JMAP\Provider\JmapProxy
     # prompt: ""
+
+plugins:
+    # - service: Plugin\Full\Classname
+    #   options:  # plugin config options
+    #       key: value

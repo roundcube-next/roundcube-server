@@ -82,7 +82,65 @@ class App
         $controller->addProcessor(new Processor\Auth());
         $controller->addProcessor(new Processor\JMAP());
 
-        // TODO: load plugins from config
+        // load plugins from config
+        $this->loadPlugins();
+    }
+
+    /**
+     * Subroutine to load and initialize plugins enabled in config
+     */
+    protected function loadPlugins()
+    {
+        $config = $this->get('Config');
+        $logger = Logger::get('app');
+        $plugins = [];
+
+        // load configured plugins
+        foreach ((array)$config->get('plugins', []) as $plugin) {
+            if (empty($plugin['service']))
+                continue;
+
+            try {
+                $options = !empty($plugin['options']) ? $plugin['options'] : [];
+                $plugins[] = $this->loadPlugin($plugin['service'], $options);
+            }
+            catch (\RuntimeException $e) {
+                $logger->err(strval($e));
+                continue;
+            }
+        }
+
+        // initialize loaded plugins
+        foreach ($plugins as $plugin) {
+            $plugin->init();
+        }
+    }
+
+    /**
+     * Load the given plugin
+     *
+     * @param string $name Plugin class name
+     * @param array $options Hash array with plugin options
+     * @param boolean $init Immediately initialize the loaded plugin
+     * @return object Roundcube\Server\Plugin\AbstractPlugin
+     * @throws Roundcube\Server\Exception\ServiceNotFoundException, \RuntimeException
+     */
+    public function loadPlugin($name, $options = [], $init = false)
+    {
+        $plugin = $this->get($name);
+
+        if ($plugin instanceof Plugin\AbstractPlugin) {
+            $options = is_array($options) ? $options : [];
+            $plugin->setup($this, $options);
+        }
+        else {
+            throw new \RuntimeException("Failed loading plugin " . $name . "; not an instance of Roundcube\Server\Plugin\AbstractPlugin");
+        }
+
+        if ($init)
+            $plugin->init();
+
+        return $plugin;
     }
 
     /**
