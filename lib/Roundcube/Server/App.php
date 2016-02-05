@@ -127,6 +127,10 @@ class App
      */
     public function loadPlugin($name, $options = [], $init = false)
     {
+        // return already loaded instance of the requested plugin
+        if ($this->has($name))
+            return $this->get($name);
+
         $plugin = $this->get($name);
 
         if ($plugin instanceof Plugin\AbstractPlugin) {
@@ -201,7 +205,9 @@ class App
      */
     public function has($name)
     {
-        return isset($this->singletons[$this->normalizeName($name)]);
+        $sname = $this->normalizeName($name);
+        return isset($this->singletons[$sname]) ||
+            (isset($this->aliases[$sname]) && isset($this->singletons[$this->aliases[$sname]]));
     }
 
     /**

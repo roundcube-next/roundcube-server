@@ -30,8 +30,8 @@ if (!defined('ROUNDCUBE_ENV')) {
 $loader = require_once(ROUNDCUBE_INSTALL_ROOT . '/vendor/autoload.php');
 $loader->set('Roundcube', [ROUNDCUBE_INSTALL_ROOT . '/lib']);  // register Roundcube namespace
 
-use \Roundcube\Logger;
-use \Roundcube\Server;
+use Roundcube\Logger;
+use Roundcube\Server;
 
 // create server app instance
 $app = Server\App::getInstance(ROUNDCUBE_ENV);

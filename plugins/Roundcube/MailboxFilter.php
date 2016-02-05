@@ -38,7 +38,10 @@
  * For full license information see http://www.gnu.org/licenses/gpl-3.0
  */
 
-namespace Roundcube\Server\Plugin;
+namespace Roundcube\Plugins;
+
+use Roundcube\Server\Plugin\AbstractPlugin;
+
 
 class MailboxFilter extends AbstractPlugin
 {
