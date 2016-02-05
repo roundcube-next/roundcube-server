@@ -21,6 +21,7 @@ use Roundcube\Server\Controller;
 use Roundcube\Server\Auth\ProviderInterface;
 use Roundcube\Server\Auth\AuthenticatedIdentity;
 use Roundcube\Server\Exception\ProcessorException;
+use Roundcube\Server\Exception\AuthenticationAbortedException;
 use Sabre\HTTP\Request;
 use Sabre\HTTP\Response;
 
@@ -54,12 +55,7 @@ class Auth implements ProcessorInterface
         foreach ((array)$config->get('auth.providers') as $providerclass) {
             try {
                 $provider = $app->get($providerclass);
-                if ($provider instanceof ProviderInterface) {
-                    $this->providers[] = $provider;
-                }
-                else {
-                    throw new \RuntimeException("The provider class $providerclass doesn't implement Roundcube\Server\Auth\ProviderInterface");
-                }
+                $this->addProvider($provider);
             }
             catch (\RuntimeException $e) {
                 // TODO: log this
@@ -75,6 +71,29 @@ class Auth implements ProcessorInterface
     public function getJmapRoutes()
     {
         return array();
+    }
+
+    /**
+     * Register an authentication provider instance to this processor
+     *
+     * @param object Roundcube\Server\Auth\ProviderInterface $provider
+     * @param boolean $prepend Prepend to the list of providers
+     * @throws RuntimeException
+     */
+    public function addProvider(ProviderInterface $provider, $prepend = false)
+    {
+        if (!($provider instanceof ProviderInterface)) {
+            throw new \RuntimeException("The provider class " . get_class($provider) . " doesn't implement Roundcube\Server\Auth\ProviderInterface");
+        }
+
+        if (!in_array($provider, $this->providers)) {
+            if ($prepend) {
+                array_unshift($this->providers, $provider);
+            }
+            else {
+                $this->providers[] = $provider;
+            }
+        }
     }
 
     /**
@@ -127,7 +146,7 @@ class Auth implements ProcessorInterface
 
         // initial auth request
         if (isset($json_input['username'])) {
-            $this->ctrl->emit('jmap:auth:init', [ [ 'data' => $json_input ] ]);
+            $this->ctrl->emit('jmap:auth:init', [ [ 'data' => $json_input, 'processor' => $this ] ]);
 
             $methods = [];
             foreach ($this->providers as $provider) {
@@ -145,19 +164,22 @@ class Auth implements ProcessorInterface
                 $result['prompt'] = $prompt;
 
             $status = 200;
-            $this->ctrl->emit('jmap:auth:more', [ ['result' => &$result, 'status' => &$status ] ]);
+            $this->ctrl->emit('jmap:auth:more', [ ['result' => &$result, 'status' => &$status, 'processor' => $this ] ]);
 
             $response->setBody(json_encode($result));
             $response->setStatus($status);
         }
         // auth continuation request
         else if (isset($json_input['token']) && isset($json_input['method'])) {
-            $this->ctrl->emit('jmap:auth:continue', [ [ 'data' => $json_input ] ]);
+            $this->session->start($json_input['token']);
+
+            // trigger event AFTER session has been initialized with the continuation token
+            $this->ctrl->emit('jmap:auth:continue', [ [ 'data' => $json_input, 'processor' => $this ] ]);
 
             // validate token (which is the session key) ...
-            $this->session->start($json_input['token']);
             if ($this->session->key !== $json_input['token'] || empty($this->session->get('Auth\username'))) {
-                $this->ctrl->emit('jmap:auth:restart', [ [ 'input' => $json_input, 'status' => 403 ] ]);
+                $this->ctrl->logger->debug("Invalid session token provided", ['input' => $json_input, 'session' => $this->session->key, 'username' => $this->session->get('Auth\username')]);
+                $this->ctrl->emit('jmap:auth:restart', [ [ 'input' => $json_input, 'status' => 403, 'processor' => $this ] ]);
                 $response->setStatus(403);  // Restart authentication
                 return;
             }
@@ -167,7 +189,12 @@ class Auth implements ProcessorInterface
             $authenticated = false;
             foreach ($this->providers as $provider) {
                 if (in_array($json_input['method'], $provider->getAuthMethods())) {
-                    $authenticated = $provider->authenticate($json_input);
+                    try {
+                        $authenticated = $provider->authenticate($json_input);
+                    }
+                    catch (AuthenticationAbortedException $e) {
+                        break;
+                    }
                 }
                 if ($authenticated) {
                     break;
@@ -189,7 +216,7 @@ class Auth implements ProcessorInterface
             else {
                 // report authentication failure
                 // TODO: create the same response as in initial auth request above
-                $this->ctrl->emit('jmap:auth:failure', [ [ 'input' => $json_input, 'status' => 401 ] ]);
+                $this->ctrl->emit('jmap:auth:failure', [ [ 'input' => $json_input, 'status' => 401, 'processor' => $this ] ]);
                 $response->setStatus(401);
             }
         }
@@ -251,7 +278,7 @@ class Auth implements ProcessorInterface
             $result['accessToken'] = $accessToken;
 
         $status = $accessToken ? 201 : 200;
-        $this->ctrl->emit('jmap:auth:success', [ [ 'result' => &$result, 'status' => &$status ] ]);
+        $this->ctrl->emit('jmap:auth:success', [ [ 'result' => &$result, 'status' => &$status, 'processor' => $this ] ]);
 
         $response->setBody(json_encode($result));
         $response->setStatus($status);

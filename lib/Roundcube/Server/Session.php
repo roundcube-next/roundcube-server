@@ -220,7 +220,11 @@ class Session
 
         session_unset();
         $this->changed = false;
-        return session_destroy();
+
+        if (php_sapi_name() !== 'cli')
+            return session_destroy();
+        else
+            return true;
     }
 
     /**

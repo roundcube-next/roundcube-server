@@ -82,6 +82,7 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
         $session = App::getInstance()->get('Session');
         $session->start();
         $session->set('Auth\authenticated', time());
+        $session->set('Auth\identity', new Auth\AuthenticatedIdentity(['username' => 'test']));
 
         $response = $this->sendRequest(null, '/auth', ['Authorization' => $session->key]);
         $jsondata = json_decode($response->getBody(), true);

@@ -36,6 +36,7 @@ interface ProviderInterface
      *
      * @param array Data submitted with the authentication request
      * @return mixed Roundcube\Server\Auth\AuthenticatedIdentity on success, false on failure
+     * @throws Roundcube\Server\Exception\AuthenticationAbortedException
      */
     public function authenticate(array $request);
 

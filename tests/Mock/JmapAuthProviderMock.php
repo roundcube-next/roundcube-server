@@ -35,11 +35,12 @@ class JmapAuthProviderMock implements AuthProviderInterface
 
     public function authenticate(array $data)
     {
-        if (!empty($data['username']) && !empty($data['password'])) {
+        if (!empty($data['username']) && !empty($data['password']) && $data['password'] === '123456') {
             $this->identity = new AuthenticatedIdentity($data);
+            return $this->identity;
         }
 
-        return $this->identity ?: false;
+        return false;
     }
 
     public function getAccountID()
