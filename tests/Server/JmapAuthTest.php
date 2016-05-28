@@ -73,7 +73,9 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(201, $response->getStatus());
         $this->assertEquals('application/json', $response->getHeader('content-type'));
         $this->assertArrayHasKey('accessToken', $jsondata);
-        $this->assertArrayHasKey('api', $jsondata);
+        $this->assertArrayHasKey('apiUrl', $jsondata);
+        $this->assertArrayHasKey('username', $jsondata);
+        $this->assertEquals('john.doe', $jsondata['username']);
     }
 
     public function testRefetchUrls()
@@ -89,6 +91,6 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(200, $response->getStatus());
         $this->assertEquals('application/json', $response->getHeader('content-type'));
-        $this->assertArrayHasKey('api', $jsondata);
+        $this->assertArrayHasKey('apiUrl', $jsondata);
     }
 }
