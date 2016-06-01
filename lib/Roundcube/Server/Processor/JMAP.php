@@ -79,8 +79,8 @@ class JMAP implements ProcessorInterface
     public function getJmapRoutes()
     {
         return [
-            'api'      => 'jmap',
-            'download' => 'download/{blobId}/{name}',
+            'apiUrl'      => 'jmap',
+            'downloadUrl' => 'download/{blobId}/{name}',
         ];
     }
 
@@ -134,6 +134,7 @@ class JMAP implements ProcessorInterface
             if (isset($this->methodmap[$method])) {
                 foreach ($this->invokeProviders($method, $args) as $res) {
                     $this->ctrl->emit('jmap:response', [['method' => $method, 'args' => $args, 'result' => &$res]]);
+                    $this->ctrl->emit('jmap:response:' . $method, [['args' => $args, 'result' => &$res]]);
                     $response->addResponse($res[0], $res[1], $id);
                 }
             }

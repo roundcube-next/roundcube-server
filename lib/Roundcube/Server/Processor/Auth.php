@@ -257,10 +257,10 @@ class Auth implements ProcessorInterface
     {
         // mandatory JMAP API endpoints
         $routes = [
-            'api'         => '!undefined',
-            'upload'      => '!undefined',
-            'download'    => '!undefined',
-            'eventSource' => '!undefined',
+            'apiUrl'         => '!undefined',
+            'uploadUrl'      => '!undefined',
+            'downloadUrl'    => '!undefined',
+            'eventSourceUrl' => '!undefined',
         ];
 
         // collect service endpoint routes for the registered processors
@@ -276,6 +276,9 @@ class Auth implements ProcessorInterface
 
         if (!empty($accessToken))
             $result['accessToken'] = $accessToken;
+
+        if ($this->session && $this->session->get('Auth\identity'))
+          $result['username'] = $this->session->get('Auth\identity')->username;
 
         $status = $accessToken ? 201 : 200;
         $this->ctrl->emit('jmap:auth:success', [ [ 'result' => &$result, 'status' => &$status, 'processor' => $this ] ]);
