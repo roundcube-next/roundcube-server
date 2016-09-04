@@ -30,6 +30,8 @@ use Sabre\HTTP\Response;
  */
 class Auth implements ProcessorInterface
 {
+    const SCHEME = 'X-JMAP';
+
     protected $ctrl;
 
     protected $session;
@@ -113,6 +115,10 @@ class Auth implements ProcessorInterface
             default:
                 throw new ProcessorException(405, "Method " . $request->getMethod() . " not allowed");
         }
+
+        if ($response->getStatus() === 401) {
+            $response->setHeader('WWW-Authenticate', self::SCHEME);
+        }
     }
 
     /**
@@ -153,11 +159,11 @@ class Auth implements ProcessorInterface
                 $methods = array_merge($methods, $provider->getAuthMethods());
             }
 
-            // start session and generate the continuationToken
+            // start session and generate the loginId
             $this->session->start();
             $this->session->set('Auth\username', $json_input['username']);
 
-            $result = [ 'methods' => array_unique($methods), 'continuationToken' => $this->session->key ];
+            $result = [ 'methods' => array_unique($methods), 'loginId' => $this->session->key ];
 
             // add prompt phrase stored in config
             if ($prompt = App::getInstance()->get('Config')->get('auth.prompt'))
@@ -170,17 +176,17 @@ class Auth implements ProcessorInterface
             $response->setStatus($status);
         }
         // auth continuation request
-        else if (isset($json_input['token']) && isset($json_input['method'])) {
-            $this->session->start($json_input['token']);
+        else if (isset($json_input['loginId']) && isset($json_input['type'])) {
+            $this->session->start($json_input['loginId']);
 
             // trigger event AFTER session has been initialized with the continuation token
             $this->ctrl->emit('jmap:auth:continue', [ [ 'data' => $json_input, 'processor' => $this ] ]);
 
             // validate token (which is the session key) ...
-            if ($this->session->key !== $json_input['token'] || empty($this->session->get('Auth\username'))) {
-                $this->ctrl->logger->debug("Invalid session token provided", ['input' => $json_input, 'session' => $this->session->key, 'username' => $this->session->get('Auth\username')]);
-                $this->ctrl->emit('jmap:auth:restart', [ [ 'input' => $json_input, 'status' => 403, 'processor' => $this ] ]);
-                $response->setStatus(403);  // Restart authentication
+            if ($this->session->key !== $json_input['loginId'] || empty($this->session->get('Auth\username'))) {
+                $this->ctrl->logger->debug("Invalid session loginId provided", ['input' => $json_input, 'session' => $this->session->key, 'username' => $this->session->get('Auth\username')]);
+                $this->ctrl->emit('jmap:auth:restart', [ [ 'input' => $json_input, 'status' => 410, 'processor' => $this ] ]);
+                $response->setStatus(410);  // Restart authentication
                 return;
             }
 
@@ -188,7 +194,7 @@ class Auth implements ProcessorInterface
             $json_input['username'] = $this->session->get('Auth\username');
             $authenticated = false;
             foreach ($this->providers as $provider) {
-                if (in_array($json_input['method'], $provider->getAuthMethods())) {
+                if (self::getAuthMethod($provider, $json_input['type'])) {
                     try {
                         $authenticated = $provider->authenticate($json_input);
                     }
@@ -216,12 +222,12 @@ class Auth implements ProcessorInterface
             else {
                 // report authentication failure
                 // TODO: create the same response as in initial auth request above
-                $this->ctrl->emit('jmap:auth:failure', [ [ 'input' => $json_input, 'status' => 401, 'processor' => $this ] ]);
-                $response->setStatus(401);
+                $this->ctrl->emit('jmap:auth:failure', [ [ 'input' => $json_input, 'status' => 403, 'processor' => $this ] ]);
+                $response->setStatus(403);
             }
         }
         else {
-            $response->setStatus(400);
+            $response->setStatus(401);
         }
     }
 
@@ -285,5 +291,25 @@ class Auth implements ProcessorInterface
 
         $response->setBody(json_encode($result));
         $response->setStatus($status);
+    }
+
+    /**
+     * Helper method to get the matching auth method from the given provider
+     *
+     * @param object $provider Auth provider
+     * @param string $type Requested auth method type
+     * @return mixed AuthMethod or null if none matches
+     */
+    protected static function getAuthMethod(ProviderInterface $provider, $type)
+    {
+        $result = null;
+
+        foreach ($provider->getAuthMethods() as $method) {
+            if ($method->type === $type) {
+                $result = $method;
+            }
+        }
+
+        return $result;
     }
 }

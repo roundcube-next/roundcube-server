@@ -16,6 +16,7 @@
 
 namespace Mock;
 
+use Roundcube\Server\Auth\AuthMethod;
 use Roundcube\Server\Auth\AuthenticatedIdentity;
 use Roundcube\Server\Auth\ProviderInterface as AuthProviderInterface;
 
@@ -30,12 +31,12 @@ class JmapAuthProviderMock implements AuthProviderInterface
 
     public function getAuthMethods()
     {
-        return [ 'password' ];
+        return [ new AuthMethod('password') ];
     }
 
     public function authenticate(array $data)
     {
-        if (!empty($data['username']) && !empty($data['password']) && $data['password'] === '123456') {
+        if (!empty($data['username']) && !empty($data['value']) && $data['value'] === '123456') {
             $this->identity = new AuthenticatedIdentity($data);
             return $this->identity;
         }

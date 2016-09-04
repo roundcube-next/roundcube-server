@@ -46,7 +46,7 @@ class JmapServerTest extends \PHPUnit_Framework_TestCase
             $body = json_encode($body);
 
         $request = new HTTP\Request('POST', $path, $headers, $body);
-        $request->setHeader('Authorization', $this->session->key);
+        $request->setHeader('Authorization', 'X-JMAP ' . $this->session->key);
 
         $this->server->httpRequest = $request;
         $this->server->process();

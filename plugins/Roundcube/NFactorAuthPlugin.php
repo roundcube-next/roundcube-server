@@ -15,6 +15,7 @@
 namespace Roundcube\Plugins;
 
 use Roundcube\Logger;
+use Roundcube\Server\Auth\AuthMethod;
 use Roundcube\Server\Plugin\AbstractPlugin;
 use Roundcube\Server\Auth\ProviderInterface;
 use Roundcube\Server\Auth\AuthenticatedIdentity;
@@ -66,8 +67,8 @@ class NFactorAuthPlugin extends AbstractPlugin implements ProviderInterface
             $args['status'] = 200;
             $args['result'] = [
                 'methods' => $this->getAuthMethods(),
-                'continuationToken' => $session->key,
-                'prompt' => '2nd factor authentication required (6 times x)',
+                'loginId' => $session->key,
+                'prompt' => 'TOTP authentication required (6 times x)',
             ];
         }
         else if ($this->authSuccess) {
@@ -82,7 +83,7 @@ class NFactorAuthPlugin extends AbstractPlugin implements ProviderInterface
      */
     public function getAuthMethods()
     {
-        return ['password'];
+        return [new AuthMethod('totp')];
     }
 
     /**
@@ -97,12 +98,12 @@ class NFactorAuthPlugin extends AbstractPlugin implements ProviderInterface
         Logger::get('2fa')->debug('authenticate', ['data' => $data, 'identity' => $session->get('Auth\identity')]);
 
         // return the AuthenticatedIdentity already stored in session
-        if (!empty($data['password']) && $data['password'] === $this->options['password'] && $session->get('Auth\identity')) {
+        if (!empty($data['value']) && $data['value'] === $this->options['code'] && $session->get('Auth\identity')) {
             $this->authSuccess = true;
             return $session->get('Auth\identity');
         }
         else {
-            throw new AuthenticationAbortedException("2nd factor password doesn't match");
+            throw new AuthenticationAbortedException("TOTP code doesn't match");
         }
 
         return false;

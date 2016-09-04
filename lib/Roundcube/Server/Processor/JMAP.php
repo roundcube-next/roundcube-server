@@ -97,6 +97,10 @@ class JMAP implements ProcessorInterface
             default:
                 throw new ProcessorException(405, "Method " . $request->getMethod() . " not allowed");
         }
+
+        if ($response->getStatus() === 401) {
+            $response->setHeader('WWW-Authenticate', Auth::SCHEME);
+        }
     }
 
     /**

@@ -27,7 +27,7 @@ interface ProviderInterface
      * List authentication methods this provier supports
      * See http://jmap.io/spec.html#getting-an-access-token
      *
-     * @return array
+     * @return array of AuthMethod objects
      */
     public function getAuthMethods();
 

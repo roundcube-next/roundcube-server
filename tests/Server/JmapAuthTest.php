@@ -49,6 +49,13 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
         return $this->server->httpResponse;
     }
 
+    public function testUnauthorized()
+    {
+        $response = $this->sendRequest(null, '/auth');
+        $this->assertEquals(401, $response->getStatus());
+        $this->assertEquals('X-JMAP', $response->getHeader('WWW-Authenticate'));
+    }
+
     public function testAuth()
     {
         // initial auth step
@@ -62,11 +69,11 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue(is_array($jsondata));
         $this->assertTrue(is_array($jsondata['methods']));
-        $this->assertArrayHasKey('continuationToken', $jsondata);
+        $this->assertArrayHasKey('loginId', $jsondata);
 
         // secondary auth step
-        $method = $jsondata['methods'][0];
-        $data = [ 'token' => $jsondata['continuationToken'], 'method' => $method, 'password' => '123456' ];
+        $method = $jsondata['methods'][0]['type'];
+        $data = [ 'loginId' => $jsondata['loginId'], 'type' => $method, 'value' => '123456' ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
@@ -86,7 +93,7 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
         $session->set('Auth\authenticated', time());
         $session->set('Auth\identity', new Auth\AuthenticatedIdentity(['username' => 'test']));
 
-        $response = $this->sendRequest(null, '/auth', ['Authorization' => $session->key]);
+        $response = $this->sendRequest(null, '/auth', ['Authorization' => 'X-JMAP ' . $session->key]);
         $jsondata = json_decode($response->getBody(), true);
 
         $this->assertEquals(200, $response->getStatus());

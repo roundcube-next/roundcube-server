@@ -22,6 +22,7 @@ use Roundcube\Logger;
 use Roundcube\Server\App;
 use Roundcube\Server\Controller;
 use Roundcube\Server\Processor\ProcessorInterface;
+use Roundcube\Server\Auth\AuthMethod;
 use Roundcube\JMAP\MailProvider;
 use Roundcube\JMAP\Exception\RuntimeException;
 use Roundcube\Server\Auth\AuthenticatedIdentity;
@@ -59,7 +60,7 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
      */
     public function getAuthMethods()
     {
-        return [ 'password' ];
+        return [new AuthMethod('password')];
     }
 
     /**
@@ -71,7 +72,7 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
     {
         $success = false;
 
-        if (empty($data['username']) || empty($data['password'])) {
+        if (empty($data['username']) || empty($data['value'])) {
             // TODO: throw exception? log error?
             return $success;
         }
@@ -79,7 +80,7 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
         // POST to jmapproxy.url /signup
         $request = new HTTP\Request('POST', $this->proxyconfig['url'] . '/signup');
         $request->setHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $postdata = $this->proxyconfig['signup'] + ['username' => $data['username'], 'password' => $data['password']];
+        $postdata = $this->proxyconfig['signup'] + ['username' => $data['username'], 'password' => $data['value']];
         $request->setBody(http_build_query($postdata));
 
         // $this->logger->debug('authenticate:request', ['dump' => strval($request)]);

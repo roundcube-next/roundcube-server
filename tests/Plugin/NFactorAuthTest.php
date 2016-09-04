@@ -33,7 +33,7 @@ class NFactorAuthTest extends \PHPUnit_Framework_TestCase
         $app = App::getInstance();
 
         // force the plugin to be loaded
-        $app->loadPlugin('Roundcube\Plugins\NFactorAuthPlugin', ['password' => 'xxxxxx'], true);
+        $app->loadPlugin('Roundcube\Plugins\NFactorAuthPlugin', ['code' => 'xxxxxx'], true);
 
         $this->server = $app->get('Server\Controller');
         $this->server->sapi = new \Mock\SapiMock();
@@ -73,29 +73,29 @@ class NFactorAuthTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue(is_array($jsondata));
         $this->assertTrue(is_array($jsondata['methods']));
-        $this->assertArrayHasKey('continuationToken', $jsondata);
+        $this->assertArrayHasKey('loginId', $jsondata);
 
         // auth continue step
-        $method = $jsondata['methods'][0];
-        $data = [ 'token' => $jsondata['continuationToken'], 'method' => $method, 'password' => '123456' ];
+        $method = $jsondata['methods'][0]['type'];
+        $data = [ 'loginId' => $jsondata['loginId'], 'type' => $method, 'value' => '123456' ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
         // requires a 2nd password to be submitted
         $this->assertEquals(200, $response->getStatus());
-        $this->assertArrayHasKey('continuationToken', $jsondata);
+        $this->assertArrayHasKey('loginId', $jsondata);
         $this->assertArrayHasKey('prompt', $jsondata);
 
         // submit (wrong) 2nd password
-        $method = $jsondata['methods'][0];
-        $data = [ 'token' => $jsondata['continuationToken'], 'method' => $method, 'password' => '' ];
+        $method = $jsondata['methods'][0]['type'];
+        $data = [ 'loginId' => $jsondata['loginId'], 'type' => $method, 'value' => '' ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
-        // expect auth failure response (401)
-        $this->assertEquals(401, $response->getStatus());
+        // expect auth failure response (403)
+        $this->assertEquals(403, $response->getStatus());
         $this->assertEquals('application/json', $response->getHeader('content-type'));
-        $this->assertArrayHasKey('continuationToken', $jsondata);
+        $this->assertArrayHasKey('loginId', $jsondata);
         $this->assertArrayHasKey('prompt', $jsondata);
     }
 
@@ -109,19 +109,19 @@ class NFactorAuthTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $response->getStatus());
 
         // auth continue step
-        $method = $jsondata['methods'][0];
-        $data = [ 'token' => $jsondata['continuationToken'], 'method' => $method, 'password' => '123456' ];
+        $method = $jsondata['methods'][0]['type'];
+        $data = [ 'loginId' => $jsondata['loginId'], 'type' => $method, 'value' => '123456' ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
         // requires a 2nd password to be submitted
         $this->assertEquals(200, $response->getStatus());
-        $this->assertArrayHasKey('continuationToken', $jsondata);
+        $this->assertArrayHasKey('loginId', $jsondata);
         $this->assertArrayHasKey('prompt', $jsondata);
 
         // submit 2nd password
-        $method = $jsondata['methods'][0];
-        $data = [ 'token' => $jsondata['continuationToken'], 'method' => $method, 'password' => 'xxxxxx' ];
+        $method = $jsondata['methods'][0]['type'];
+        $data = [ 'loginId' => $jsondata['loginId'], 'type' => $method, 'value' => 'xxxxxx' ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
@@ -129,7 +129,7 @@ class NFactorAuthTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(201, $response->getStatus());
         $this->assertEquals('application/json', $response->getHeader('content-type'));
         $this->assertArrayHasKey('accessToken', $jsondata);
-        $this->assertArrayHasKey('api', $jsondata);
+        $this->assertArrayHasKey('apiUrl', $jsondata);
     }
 
     public function testAuthProviderChain()
@@ -142,24 +142,24 @@ class NFactorAuthTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $response->getStatus());
 
         // auth continue step
-        $method = $jsondata['methods'][0];
-        $data = [ 'token' => $jsondata['continuationToken'], 'method' => $method, 'password' => '123456' ];
+        $method = $jsondata['methods'][0]['type'];
+        $data = [ 'loginId' => $jsondata['loginId'], 'type' => $method, 'value' => '123456' ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
         // requires a 2nd password to be submitted
         $this->assertEquals(200, $response->getStatus());
-        $this->assertArrayHasKey('continuationToken', $jsondata);
+        $this->assertArrayHasKey('loginId', $jsondata);
         $this->assertArrayHasKey('prompt', $jsondata);
 
         // submit 1st password for 2nd factor
-        $method = $jsondata['methods'][0];
-        $data = [ 'token' => $jsondata['continuationToken'], 'method' => $method, 'password' => '123456' ];
+        $method = $jsondata['methods'][0]['type'];
+        $data = [ 'loginId' => $jsondata['loginId'], 'type' => $method, 'value' => '123456' ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
         // expect auth failure
-        $this->assertEquals(401, $response->getStatus());
+        $this->assertEquals(403, $response->getStatus());
         $this->assertEquals('application/json', $response->getHeader('content-type'));
     }
 
