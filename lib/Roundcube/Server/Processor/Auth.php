@@ -243,6 +243,9 @@ class Auth implements ProcessorInterface
             return 401;
         }
 
+        // cut off authorization scheme
+        $token = preg_replace('/^X-JMAP\s+/', '', $token);
+
         // load session data for the given auth token
         $session = App::getInstance()->get('Session');
         $session->start($token);
