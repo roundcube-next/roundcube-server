@@ -187,7 +187,7 @@ class Controller implements Event\EventEmitterInterface
 
         // try to match a RFC6570 URI template route
         foreach (array_keys($this->routes) as $route) {
-            $expr = '/^' . preg_replace('/\{[a-z0-9:?-]+\}/Ui', '(.+)', $route) . '$/';
+            $expr = '!^' . preg_replace('/\{[a-z0-9:?-]+\}/Ui', '(.+)', $route) . '$!';
             if (preg_match($expr, $path)) {
                 return $route;
             }
