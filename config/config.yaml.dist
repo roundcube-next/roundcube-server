@@ -2,6 +2,10 @@
 jmapproxy:
     url: http://<jmap-proxy-host>
 
+    # cURL connection settings
+    ssl_verifypeer: true  # equals to CURLOPT_SSL_VERIFYPEER
+    ssl_verifyhost: 2     # equals to CURLOPT_SSL_VERIFYHOST
+
     # POST these parameter to /signup for authentication
     signup:
       imapHost: <imap-host-or-ip>

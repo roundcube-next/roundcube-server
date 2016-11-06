@@ -87,6 +87,7 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
 
         try {
             $client = new HttpClient();
+            $this->setCurlProxySettings($client);
             $response = $client->send($request);
             $this->logger->debug('authenticate:response', ['dump' => strval($response)]);
 
@@ -178,6 +179,7 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
 
         try {
             $client = new HttpClient();
+            $this->setCurlProxySettings($client);
             $response = $client->send($request);
             $this->logger->debug('proxy:response', ['dump' => strval($response)]);
 
@@ -199,6 +201,23 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
 
         // fail with a runtime error
         throw new RuntimeException($error);
+    }
+
+    /**
+     * Apply cURL options from proxy confit go the given Http client instance
+     */
+    protected function setCurlProxySettings($client)
+    {
+        $optionsmap = [
+            'ssl_verifypeer' => CURLOPT_SSL_VERIFYPEER,
+            'ssl_verifyhost' => CURLOPT_SSL_VERIFYHOST,
+        ];
+
+        foreach ($this->proxyconfig as $key => $value) {
+            if (isset($optionsmap[$key])) {
+                $client->addCurlSetting($optionsmap[$key], $value);
+            }
+        }
     }
 
     public function getMailboxes($args)
