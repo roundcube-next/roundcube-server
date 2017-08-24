@@ -48,4 +48,22 @@ class JmapAuthProviderMock implements AuthProviderInterface
     {
         return $this->identity->username;
     }
+
+     public function getAccounts()
+     {
+         return [
+             [
+                 'id' => '12345',
+                 'name' => 'Fake Account',
+                 'isPrimary' => true,
+                 'hasDataFor' => ['mail'],
+             ],
+             [
+                'id' => '98765',
+                'name' => 'Secondary Account',
+                'isPrimary' => false,
+                'hasDataFor' => ['mail'],
+            ]
+        ];
+    }
 }

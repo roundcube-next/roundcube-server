@@ -19,7 +19,7 @@ date_default_timezone_set('UTC');
 
 ini_set('error_reporting', E_ALL | E_STRICT | E_DEPRECATED);
 
-define('ROUNDCUBE_INSTALL_ROOT', realpath('../'));
+define('ROUNDCUBE_INSTALL_ROOT', realpath(__DIR__ . '/../'));
 define('ROUNDCUBE_ENV', 'test');
 
 // Composer autoloader

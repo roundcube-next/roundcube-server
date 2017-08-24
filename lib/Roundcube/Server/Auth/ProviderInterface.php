@@ -40,4 +40,10 @@ interface ProviderInterface
      */
     public function authenticate(array $request);
 
+    /**
+     * Getter for the list of accounts this provider is connected with
+     *
+     * @return array
+     */
+     public function getAccounts();
 }

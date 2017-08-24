@@ -59,7 +59,12 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
     public function testAuth()
     {
         // initial auth step
-        $data = [ 'username' => 'john.doe', 'clientName' => 'PHPUnit/JmapAuthTest', 'clientVersion' => '0.0.1', 'deviceName' => 'CLI' ];
+        $data = [
+            'username' => 'john.doe',
+            'clientName' => 'PHPUnit/JmapAuthTest',
+            'clientVersion' => '0.0.1',
+            'deviceName' => 'CLI',
+        ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
@@ -72,8 +77,11 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('loginId', $jsondata);
 
         // secondary auth step
-        $method = $jsondata['methods'][0]['type'];
-        $data = [ 'loginId' => $jsondata['loginId'], 'type' => $method, 'value' => '123456' ];
+        $data = [
+            'loginId' => $jsondata['loginId'],
+            'type' => $jsondata['methods'][0]['type'],
+            'value' => '123456',
+        ];
         $response = $this->sendRequest($data, '/auth');
         $jsondata = json_decode($response->getBody(), true);
 
@@ -83,15 +91,26 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('apiUrl', $jsondata);
         $this->assertArrayHasKey('username', $jsondata);
         $this->assertEquals('john.doe', $jsondata['username']);
+
+        $this->assertArrayHasKey('accounts', $jsondata);
+        $this->assertTrue(is_array($jsondata['accounts']));
+        $this->assertequals(2, count($jsondata['accounts']));
+        $this->assertArrayHasKey('12345', $jsondata['accounts']);
+        $this->assertTrue(is_array($jsondata['accounts']['12345']));
+
+        $this->assertArrayHasKey('capabilities', $jsondata);
+        $this->assertTrue(is_array($jsondata['capabilities']));
     }
 
     public function testRefetchUrls()
     {
         // fake authenticated session
+        $mock = new \Mock\JmapAuthProviderMock();
         $session = App::getInstance()->get('Session');
         $session->start();
         $session->set('Auth\authenticated', time());
         $session->set('Auth\identity', new Auth\AuthenticatedIdentity(['username' => 'test']));
+        $session->set('Auth\accounts', $mock->getAccounts());
 
         $response = $this->sendRequest(null, '/auth', ['Authorization' => 'X-JMAP ' . $session->key]);
         $jsondata = json_decode($response->getBody(), true);
@@ -99,5 +118,8 @@ class JmapAuthTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(200, $response->getStatus());
         $this->assertEquals('application/json', $response->getHeader('content-type'));
         $this->assertArrayHasKey('apiUrl', $jsondata);
+        $this->assertArrayHasKey('username', $jsondata);
+        $this->assertArrayHasKey('accounts', $jsondata);
+        $this->assertArrayHasKey('capabilities', $jsondata);
     }
 }

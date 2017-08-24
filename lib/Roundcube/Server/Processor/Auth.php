@@ -193,10 +193,12 @@ class Auth implements ProcessorInterface
             // ...and get username from session
             $json_input['username'] = $this->session->get('Auth\username');
             $authenticated = false;
+            $accounts = [];
             foreach ($this->providers as $provider) {
                 if (self::getAuthMethod($provider, $json_input['type'])) {
                     try {
                         $authenticated = $provider->authenticate($json_input);
+                        $accounts = $provider->getAccounts();
                     }
                     catch (AuthenticationAbortedException $e) {
                         break;
@@ -215,6 +217,9 @@ class Auth implements ProcessorInterface
                 $this->session->regenerateId(true);
                 $this->session->set('Auth\authenticated', time());
                 $this->session->set('Auth\identity', $authenticated);
+                $this->session->set('Auth\accounts', $accounts);
+
+                // TODO: generate signingId and signingKey
 
                 // send success response
                 $this->sendAuthSuccess($response, $this->session->key);
@@ -283,11 +288,35 @@ class Auth implements ProcessorInterface
             $result[$key] = $this->ctrl->url($route, true);
         }
 
-        if (!empty($accessToken))
+        if (!empty($accessToken)) {
             $result['accessToken'] = $accessToken;
+        }
 
-        if ($this->session && $this->session->get('Auth\identity'))
-          $result['username'] = $this->session->get('Auth\identity')->username;
+        if ($this->session && $this->session->get('Auth\identity')) {
+            $result['username'] = $this->session->get('Auth\identity')->username;
+        }
+
+        if ($this->session && $this->session->get('Auth\accounts')) {
+            $result['accounts'] = [];
+            foreach ($this->session->get('Auth\accounts') as $account) {
+                $id = $account['id'];
+                unset($account['id']);
+                $result['accounts'][$id] = $account;
+            }
+        }
+
+        // TODO: add real capabilities to result
+        $result['capabilities'] = [
+            'http://jmap.io/spec-core.html' => [
+                'maxSizeUpload' => 8 * 1024 * 1024,
+                'maxSizeRequest' => 8 * 1024 * 1024,
+                'maxConcurrentUpload' => 1,
+                'maxConcurrentRequests' => 1,
+                'maxCallsInRequest' => 8,
+                'maxObjectsInGet' => 100,
+                'maxObjectsInSet' => 100,
+            ],
+        ];
 
         $status = $accessToken ? 201 : 200;
         $this->ctrl->emit('jmap:auth:success', [ [ 'result' => &$result, 'status' => &$status, 'processor' => $this ] ]);
