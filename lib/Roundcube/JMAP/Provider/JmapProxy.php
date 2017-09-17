@@ -173,7 +173,7 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
 
         $request = new HTTP\Request('POST', $this->proxyuri);
         $request->setHeader('Content-Type', 'application/json');
-        $request->setBody(json_encode([[$method, $args, $tag]]));
+        $request->setBody(json_encode([[$method, (object)$args, $tag]]));
 
         $this->logger->debug('proxy:request ' . $method, ['args' => $args, 'uri' => $this->proxyuri, 'tag' => $tag]);
 
