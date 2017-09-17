@@ -197,8 +197,9 @@ class Auth implements ProcessorInterface
             foreach ($this->providers as $provider) {
                 if (self::getAuthMethod($provider, $json_input['type'])) {
                     try {
-                        $authenticated = $provider->authenticate($json_input);
-                        $accounts = $provider->getAccounts();
+                        if ($authenticated = $provider->authenticate($json_input)) {
+                            $accounts = $provider->getAccounts();
+                        }
                     }
                     catch (AuthenticationAbortedException $e) {
                         break;
