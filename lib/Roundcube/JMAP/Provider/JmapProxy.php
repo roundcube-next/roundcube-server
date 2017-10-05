@@ -150,6 +150,28 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
                 throw new RuntimeException($result[1]['message']);
             }
         }
+
+        // migrate returned account properties to new JMAP sepc
+        array_walk($accounts, function(&$account) {
+            $account['hasDataFor'] = [];
+            if (!empty($account['hasMail'])) {
+                $account['hasDataFor'][] = 'mail';
+            }
+            if (!empty($account['hasContacts'])) {
+                $account['hasDataFor'][] = 'contacts';
+            }
+            if (!empty($account['hasCalendars'])) {
+                $account['hasDataFor'][] = 'calendars';
+            }
+            unset(
+                $account['hasMail'],
+                $account['hasContacts'],
+                $account['hasCalendars'],
+                $account['versions'],
+                $account['extensions']
+            );
+        });
+
         return $accounts;
     }
 
@@ -185,6 +207,9 @@ class JmapProxy extends MailProvider implements AuthProviderInterface
 
             if ($response->getStatus() === 200) {
                 $results = json_decode($response->getBodyAsString(), true);
+                if ($results === null) {
+                    throw new \RuntimeException('Invalid JSON data returned (' . json_last_error_msg() . ')');
+                }
                 return array_filter($results, function($res) use ($tag) { return count($res) == 3 && $res[2] == $tag; });
             }
 

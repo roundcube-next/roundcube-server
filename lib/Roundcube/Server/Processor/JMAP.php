@@ -223,18 +223,16 @@ class JMAP implements ProcessorInterface
                     // register a new account object with default properties
                     $account = $paccount + [
                         'id' => $accountID,
-                        'hasMail' => false,
-                        'hasContacts' => false,
-                        'hasCalendars' => false,
+                        'hasDataFor' => [],
                     ];
                 }
 
-                // register each provided service with a 'has<Service>' property
+                // register each provided service to the 'hasDataFor' property
                 foreach ($provider->getServices() as $service) {
-                    $prop = 'has' . ucfirst($service);
-                    $account[$prop] = true;
+                    $account['hasDataFor'][] = strtolower($service);
                 }
 
+                $account['hasDataFor'] = array_unique($account['hasDataFor']);
                 $accounts[$accountID] = $account;
             }
         }

@@ -221,6 +221,8 @@ class Auth implements ProcessorInterface
                 $this->session->set('Auth\accounts', $accounts);
 
                 // TODO: generate signingId and signingKey
+                $this->session->set('Auth\signingId', '123456');
+                $this->session->set('Auth\signingKey', '654321');
 
                 // send success response
                 $this->sendAuthSuccess($response, $this->session->key);
@@ -297,6 +299,11 @@ class Auth implements ProcessorInterface
             $result['username'] = $this->session->get('Auth\identity')->username;
         }
 
+        if ($this->session) {
+            $result['signingId'] = $this->session->get('Auth\signingId');
+            $result['signingKey'] = $this->session->get('Auth\signingKey');
+        }
+
         if ($this->session && $this->session->get('Auth\accounts')) {
             $result['accounts'] = [];
             foreach ($this->session->get('Auth\accounts') as $account) {
@@ -307,6 +314,7 @@ class Auth implements ProcessorInterface
         }
 
         // TODO: add real capabilities to result
+        // TODO: collect from accounts (from jmap proxy)
         $result['capabilities'] = [
             'http://jmap.io/spec-core.html' => [
                 'maxSizeUpload' => 8 * 1024 * 1024,
