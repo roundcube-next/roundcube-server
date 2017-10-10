@@ -22,6 +22,7 @@ use Roundcube\Server\Auth\ProviderInterface;
 use Roundcube\Server\Auth\AuthenticatedIdentity;
 use Roundcube\Server\Exception\ProcessorException;
 use Roundcube\Server\Exception\AuthenticationAbortedException;
+use Roundcube\Utils;
 use Sabre\HTTP\Request;
 use Sabre\HTTP\Response;
 
@@ -220,9 +221,10 @@ class Auth implements ProcessorInterface
                 $this->session->set('Auth\identity', $authenticated);
                 $this->session->set('Auth\accounts', $accounts);
 
-                // TODO: generate signingId and signingKey
-                $this->session->set('Auth\signingId', '123456');
-                $this->session->set('Auth\signingKey', '654321');
+                // generate signingId and signingKey
+                // TODO: store a signingId => session-ID map for lookup of JWT signed GET requests
+                $this->session->set('Auth\signingId', Utils::randomBytes(40));
+                $this->session->set('Auth\signingKey', Utils::randomBytes(64));
 
                 // send success response
                 $this->sendAuthSuccess($response, $this->session->key);

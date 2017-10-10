@@ -90,4 +90,25 @@ class Utils
 
         return false;
     }
+
+    /**
+     * Generate a string with random characters of the given length
+     *
+     * Wrapper for PHP7's random_bytes()
+     *
+     * @param int $length Lenght of the random string
+     * @return string
+     */
+    public static function randomBytes($length = 16)
+    {
+        if (function_exists('random_bytes')) {
+            $bytes = random_bytes($length);
+        } else if (function_exists('openssl_random_pseudo_bytes')) {
+            $bytes = openssl_random_pseudo_bytes($length);
+        } else {
+            throw \Exception('No reliable crypto source available.');
+        }
+
+        return substr(strtr(base64_encode($bytes), '+/=', '-:*'), 0, $length);
+    }
 }
